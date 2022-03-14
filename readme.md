@@ -1,0 +1,2 @@
+# Advent of Code Tools and Solutions
+[Advent of Code](https://adventofcode.com/) is a coding challenge and competition which takes place every December. A programming problem with two parts is released each day, and coders all over the world compete to submit the correct answer as quickly as possible. This repository contains my solutions for all 50 problems from 2021, as well as tools I developed to fetch the input and submit my answer quickly. These solutions were written as quickly as possible and therefore are not very efficient or readable in most cases.
