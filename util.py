@@ -13,15 +13,16 @@ ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
 
 class Helper:
-    def __init__(self, day=datetime.date.today().day, year=datetime.date.today().year, test_input=None):
-        self.day = day
-        self.year = year
+    def __init__(self, day=None, year=None, test_input=None):
+        self.day = day if day is not None else (datetime.date.today() + datetime.timedelta(minutes=1)).day
+        self.year = year if day is not None else datetime.date.today().year
         self.raw_input = test_input or self.load_input()
         self.raw_input = self.raw_input.strip("\n")
 
     def load_input(self):
         filename = f"{self.year}_day{self.day:02d}.txt"
         if filename not in os.listdir("puzzle_inputs"):
+            print("Fetching puzzle input")
             with open("secrets.json") as f:
                 secrets = json.load(f)
             cookies = {
@@ -88,10 +89,15 @@ class Helper:
 
         # Retry request on 504
         while True:
+            with open("secrets.json") as f:
+                secrets = json.load(f)
+            cookies = {
+                "session": secrets["session"]
+            }
             response = requests.post(
                 f"https://adventofcode.com/{self.year}/day/{self.day}/answer",
                 data={"level": part, "answer": answer},
-                cookies=self.cookies
+                cookies=cookies
             )
             if response.status_code != 504:
                 break
@@ -107,10 +113,7 @@ class Helper:
                 os.makedirs(solutions_dir)
 
             source_file = inspect.stack()[-1].filename
-            if not os.path.exists(f"{solutions_dir}/part1.py"):
-                shutil.copy(source_file, f"{solutions_dir}/part1.py")
-            else:
-                shutil.copy(source_file, f"{solutions_dir}/part2.py")
+            shutil.copy(source_file, f"{solutions_dir}/part{part}.py")
 
 
 class Grid:
