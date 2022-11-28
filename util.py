@@ -1,7 +1,10 @@
 import inspect
+import json
 import os
 import shutil
 import time
+import datetime
+
 import requests
 from bs4 import BeautifulSoup
 import typing as t
@@ -10,11 +13,7 @@ ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
 
 class Helper:
-    cookies = {
-        "session": "53616c7465645f5fccf4e0a196310f1831481baccd6468db869f65bf4552613f4e66890267895d4eb74e6ffcf2d44cff"
-    }
-
-    def __init__(self, day, year=2021, test_input=None):
+    def __init__(self, day=datetime.date.today().day, year=datetime.date.today().year, test_input=None):
         self.day = day
         self.year = year
         self.raw_input = test_input or self.load_input()
@@ -23,10 +22,15 @@ class Helper:
     def load_input(self):
         filename = f"{self.year}_day{self.day:02d}.txt"
         if filename not in os.listdir("puzzle_inputs"):
+            with open("secrets.json") as f:
+                secrets = json.load(f)
+            cookies = {
+                "session": secrets["session"]
+            }
             while True:
                 response = requests.get(
                     f"https://adventofcode.com/{self.year}/day/{self.day}/input",
-                    cookies=self.cookies
+                    cookies=cookies
                 )
                 raw_input = response.text.strip("\n")
                 print(raw_input)

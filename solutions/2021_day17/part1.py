@@ -1,6 +1,5 @@
 from util import *
 from util import Grid as g
-from packets import *
 import itertools as it
 import re
 
