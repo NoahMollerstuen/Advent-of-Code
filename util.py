@@ -1,20 +1,25 @@
 import inspect
-import json
 import os
 import shutil
 import time
 import datetime
-
 import requests
 from bs4 import BeautifulSoup
 import typing as t
+
+import web_secrets
 
 ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 
 
 class Helper:
+    headers = {
+        "User-Agent": "github.com/NoahMollerstuen/Advent-of-Code by noah@mollerstuen.com",
+        "From": "noah@mollerstuen.com"
+    }
+
     def __init__(self, day=None, year=None, test_input=None):
-        self.day = day if day is not None else (datetime.date.today() + datetime.timedelta(minutes=1)).day
+        self.day = day if day is not None else (datetime.datetime.now() + datetime.timedelta(minutes=10)).day
         self.year = year if day is not None else datetime.date.today().year
         self.raw_input = test_input or self.load_input()
         self.raw_input = self.raw_input.strip("\n")
@@ -23,21 +28,21 @@ class Helper:
         filename = f"{self.year}_day{self.day:02d}.txt"
         if filename not in os.listdir("puzzle_inputs"):
             print("Fetching puzzle input")
-            with open("secrets.json") as f:
-                secrets = json.load(f)
             cookies = {
-                "session": secrets["session"]
+                "session": web_secrets.SESSION
             }
             while True:
                 response = requests.get(
                     f"https://adventofcode.com/{self.year}/day/{self.day}/input",
-                    cookies=cookies
+                    cookies=cookies,
+                    headers=self.headers
                 )
                 raw_input = response.text.strip("\n")
                 print(raw_input)
 
                 if response.status_code != 504:
                     break
+                print("504 error, retrying...")
                 time.sleep(2)
 
             if response.status_code == 200:
@@ -63,14 +68,19 @@ class Helper:
         except ValueError:
             return split_text
 
-    def get_input_grid(self):
-        rows = self.raw_input.split("\n")
-        grid = [[c for c in row] for row in rows]
+    def get_input_list_2d(self):
+        blocks = self.raw_input.split("\n\n")
+        lines = [block.split("\n") for block in blocks]
         try:
-            grid = [[int(c) for c in row] for row in rows]
+            return [[int(line) for line in block] for block in lines]
         except ValueError:
-            pass
-        return grid
+            return lines
+
+    def get_input_grid(self):
+        return Grid.parse(self.raw_input)
+
+    def get_input_grid_3d(self):
+        return [Grid.parse(grid) for grid in self.raw_input.split("\n\n")]
 
     def submit(self, answer=None, part=None, confirm_answer=True):
         if answer is None:
@@ -89,15 +99,14 @@ class Helper:
 
         # Retry request on 504
         while True:
-            with open("secrets.json") as f:
-                secrets = json.load(f)
             cookies = {
-                "session": secrets["session"]
+                "session": web_secrets.SESSION
             }
             response = requests.post(
                 f"https://adventofcode.com/{self.year}/day/{self.day}/answer",
                 data={"level": part, "answer": answer},
-                cookies=cookies
+                cookies=cookies,
+                headers=self.headers
             )
             if response.status_code != 504:
                 break
@@ -128,6 +137,16 @@ class Grid:
             return grid[pos[0]][pos[1]]
         except IndexError:
             return default
+
+    @staticmethod
+    def parse(inp: str) -> t.List[t.List[t.Union[str, int]]]:
+        rows = inp.split("\n")
+        grid = [[c for c in row] for row in rows]
+        try:
+            grid = [[int(c) for c in row] for row in rows]
+        except ValueError:
+            pass
+        return grid
 
     @staticmethod
     def bfs(grid: t.List[t.List[t.Any]], start_y: int, start_x: int, obstacles: t.Union[t.List[t.Any], str] = "",
