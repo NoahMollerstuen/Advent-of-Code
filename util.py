@@ -18,10 +18,10 @@ class Helper:
         "From": "noah@mollerstuen.com"
     }
 
-    def __init__(self, day=None, year=None, test_input=None):
+    def __init__(self, day=None, year=None, test_input=None, test_mode=True):
         self.day = day if day is not None else (datetime.datetime.now() + datetime.timedelta(minutes=10)).day
         self.year = year if day is not None else datetime.date.today().year
-        self.raw_input = test_input or self.load_input()
+        self.raw_input = test_input if test_input and test_mode else self.load_input()
         self.raw_input = self.raw_input.strip("\n")
 
     def load_input(self):

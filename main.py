@@ -5,7 +5,8 @@ import re
 import numpy as np
 
 
-h = Helper()
+h = Helper(test_mode=False)
 
 inp = h.get_input_list()
+
 
