@@ -4,7 +4,8 @@ import itertools as it
 import re
 
 
-h = Helper(test_mode=True, test_input="""
+h = Helper(test_mode=False, test_input="""
+
 """)
 
 inp = h.get_input_list()
