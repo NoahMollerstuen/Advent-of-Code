@@ -1,3 +1,5 @@
 .idea/
 web_secrets.py
 puzzle_inputs
+**/part1_attempts.json
+**/part2_attempts.json
