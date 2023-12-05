@@ -1,4 +1,5 @@
 import inspect
+import json
 import os
 import shutil
 import time
@@ -20,7 +21,7 @@ class Helper:
 
     def __init__(self, day=None, year=None, test_input=None, test_mode=True):
         self.day = day if day is not None else (datetime.datetime.now() + datetime.timedelta(minutes=10)).day
-        self.year = year if day is not None else datetime.date.today().year
+        self.year = year if year is not None else datetime.date.today().year
         self.raw_input = test_input if test_input and test_mode else self.load_input()
         self.raw_input = self.raw_input.strip("\n")
 
@@ -90,7 +91,23 @@ class Helper:
         if part is None:
             part = 2 if os.path.exists(f"{solutions_dir}/part1.py") else 1
 
-        if confirm_answer:
+        attempts_path = f"{solutions_dir}/part{part}_attempts.json"
+        if os.path.exists(attempts_path):
+            with open(attempts_path) as f:
+                attempts = json.load(f)
+        else:
+            attempts = []
+
+        violates_feedback = False
+        for attempt, feedback in attempts:
+            if (feedback == "low" and answer <= attempt) or (feedback == "high" and answer >= attempt):
+                print(f"Answer {answer} violates previous feedback: {attempt} is too {feedback}.")
+                violates_feedback = True
+            elif feedback != "correct" and answer == attempt:
+                print(f"Answer {answer} was already submitted and is incorrect.")
+                violates_feedback = True
+
+        if confirm_answer or violates_feedback:
             print(f"Submit {answer}?")
             user_input = input('>')
             if user_input not in ['y', 'yes', 'Y']:
@@ -111,18 +128,28 @@ class Helper:
             if response.status_code != 504:
                 break
             print("504 error, retrying...")
-            time.sleep(2)
+            time.sleep(5)
 
         parsed_response = BeautifulSoup(response.text, features="html.parser")
         text = parsed_response.main.get_text().strip("\n")
         print(text)
 
-        if "That's the right answer!" in text:
-            if not os.path.exists(solutions_dir):
-                os.makedirs(solutions_dir)
+        if not os.path.exists(solutions_dir):
+            os.makedirs(solutions_dir)
 
+        if "That's the right answer!" in text:
             source_file = inspect.stack()[-1].filename
             shutil.copy(source_file, f"{solutions_dir}/part{part}.py")
+
+            feedback = "correct"
+
+        else:
+            feedback = "low" if "too low" in text else ("high" if "too high" in text else "")
+
+        attempts.append({"value": answer, "feedback": feedback})
+
+        with open(attempts_path, "w") as f:
+            json.dump(attempts, f)
 
 
 class Grid:
