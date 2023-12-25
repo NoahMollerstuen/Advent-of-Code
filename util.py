@@ -99,11 +99,13 @@ class Helper:
             attempts = []
 
         violates_feedback = False
-        for attempt, feedback in attempts:
-            if (feedback == "low" and answer <= attempt) or (feedback == "high" and answer >= attempt):
-                print(f"Answer {answer} violates previous feedback: {attempt} is too {feedback}.")
+        for attempt in attempts:
+            attempt_value = attempt["value"]
+            attempt_feedback = attempt["feedback"]
+            if (attempt_feedback == "low" and answer <= attempt_value) or (attempt_feedback == "high" and answer >= attempt_value):
+                print(f"Answer {answer} violates previous feedback: {attempt_value} is too {attempt_feedback}.")
                 violates_feedback = True
-            elif feedback != "correct" and answer == attempt:
+            elif attempt_feedback != "correct" and answer == attempt_value:
                 print(f"Answer {answer} was already submitted and is incorrect.")
                 violates_feedback = True
 
